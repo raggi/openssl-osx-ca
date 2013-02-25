@@ -6,6 +6,19 @@ openssl CA pem with the certificates found in the OSX Keychain.
 The installed CA pem file will be made available through the default X.509 store
 path.
 
+## Installation
+
+ * To install via homebrew:
+   ``` bash
+      brew tap raggi/ale
+      brew install openssl-osx-ca
+   ```
+
+ * To install standalone:
+   ``` bash
+      make install PREFIX=/opt/openssl-osx-ca
+   ```
+
 ## Intended use cases
 
  * Ruby 2.0.0+
