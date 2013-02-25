@@ -14,4 +14,4 @@ $c_rehash $tmpdir > /dev/null
 
 # XXX: I don't think this is atomic on OSX, but it's as close as we're going to
 # get without a lot more work.
-mv -f "${tmpdir}/*" "${openssldir}/"
+mv -f ${tmpdir}/* ${openssldir}/
