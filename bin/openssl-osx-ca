@@ -1,17 +1,54 @@
 #!/bin/bash
 
-set -e
+brew=$1
+if [[ "${brew}" = "" ]]; then
+	brew=$(which brew)
+fi
 
-openssl=$(brew list openssl | grep bin/openssl | head -n 1)
-c_rehash=$(brew list openssl | grep bin/c_rehash | head -n 1)
+if [[ ! -x "${brew}" ]]; then
+	echo "Homebrew not in PATH or given arguments, cannot continue"
+	exit 1
+fi
+
+openssl=$($brew list openssl | grep bin/openssl | head -n 1)
+
+[[ "${openssl}" = "" ]] && echo "Homebrew openssl not found" && exit 1
+
+c_rehash=$($brew list openssl | grep bin/c_rehash | head -n 1)
+
+[[ "${c_rehash}" = "" ]] && echo "Homebrew c_rehash (openssl) not found" && exit 1
+
 openssldir=$($openssl version -d | cut -d '"' -f 2)
 
+[[ "${openssldir}" = "" ]] && echo "openssl directory not found" && exit 1
+
 tmpdir=$(mktemp -d -t openssl-osx-ca)
+
+[[ "${tmpdir}" = "" ]] && echo "mktemp failed" && exit 1
+
 certs="${tmpdir}/cert.pem"
 security find-certificate -a -p /Library/Keychains/System.keychain > $certs
 security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
-$c_rehash $tmpdir > /dev/null
 
-# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
-# get without a lot more work.
-mv -f ${tmpdir}/* ${openssldir}/
+d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
+d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
+
+if [[ "${d1}" = "${d2}" ]]; then
+	logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
+else
+	if ! $c_rehash $tmpdir > /dev/null; then
+		logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
+
+		echo "rehash failed to verify, something is wrong"
+		echo "check ${tmpdir}/cert.pem for problems"
+		exit 1
+	fi
+
+	# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
+	# get without a lot more work.
+	mv -f ${tmpdir}/* ${openssldir}/
+
+	logger -t "$(basename $0)" "${openssldir}/cert.pem updated"
+fi
+
+rm -r "${tmpdir}"
