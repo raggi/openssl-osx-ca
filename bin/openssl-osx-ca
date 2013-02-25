@@ -3,15 +3,10 @@
 set -e
 
 openssl=$(brew list openssl | grep bin/openssl | head -n 1)
-c_rehash=$(brew list openssl | grep bin/c_rehash | head -n 1)
 openssldir=$($openssl version -d | cut -d '"' -f 2)
 
-tmpdir=$(mktemp -d -t openssl-osx-ca)
-certs="${tmpdir}/cert.pem"
+certs="$(mktemp -t openssl-osx-ca)"
 security find-certificate -a -p /Library/Keychains/System.keychain > $certs
 security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
-$c_rehash $tmpdir > /dev/null
 
-# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
-# get without a lot more work.
-mv -f ${tmpdir}/* ${openssldir}/
+mv -f ${certs} ${openssldir}/cert.pem
