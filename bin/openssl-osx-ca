@@ -27,17 +27,18 @@ tmpdir=$(mktemp -d -t openssl-osx-ca)
 [[ "${tmpdir}" = "" ]] && echo "mktemp failed" && exit 1
 
 certs="${tmpdir}/cert.pem"
+target_dir="${openssldir}/certs"
 security find-certificate -a -p /Library/Keychains/System.keychain > $certs
 security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
 
-d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
+d1=$($openssl md5 ${target_dir}/cert.pem | awk '{print $2}')
 d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
 
 if [[ "${d1}" = "${d2}" ]]; then
-	logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
+	logger -t "$(basename $0)" "${target_dir}/cert.pem up to date"
 else
 	if ! $c_rehash $tmpdir > /dev/null; then
-		logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
+		logger -t "$(basename $0)" "${target_dir}/cert.pem updated failed, see cron"
 
 		echo "rehash failed to verify, something is wrong"
 		echo "check ${tmpdir}/cert.pem for problems"
@@ -46,9 +47,9 @@ else
 
 	# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
 	# get without a lot more work.
-	mv -f ${tmpdir}/* ${openssldir}/
+	mv -f ${tmpdir}/* ${target_dir}/
 
-	logger -t "$(basename $0)" "${openssldir}/cert.pem updated"
+	logger -t "$(basename $0)" "${target_dir}/cert.pem updated"
 fi
 
 rm -r "${tmpdir}"
