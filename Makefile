@@ -4,7 +4,7 @@ BREW:=$(shell which brew)
 install: uninstall
 	echo $(BREW)
 	mkdir -p $(PREFIX)
-	cp -r $(PWD)/* $(PREFIX)/
+	cp -r ./* $(PREFIX)/
 	(crontab -l; echo "0 * * * * $(PREFIX)/bin/openssl-osx-ca $(BREW)") | crontab -
 	$(PREFIX)/bin/openssl-osx-ca $(BREW)
 
