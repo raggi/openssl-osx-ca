@@ -19,6 +19,13 @@ path.
       make install PREFIX=/opt/openssl-osx-ca
    ```
 
+ * To set the frequency, set the value of FREQUENCY when installing, defaults to
+   `@hourly`. The value of FREQUENCY must be a supported crontab time
+   specification. e.g.
+   ``` bash
+      make install FREQUENCY=@daily
+   ```
+
 ## Intended use cases
 
  * Ruby 2.0.0+
