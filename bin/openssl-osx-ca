@@ -36,7 +36,7 @@ d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
 if [[ "${d1}" = "${d2}" ]]; then
 	logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
 else
-	if ! $c_rehash $tmpdir > /dev/null; then
+	if ! $c_rehash -- $tmpdir > /dev/null; then
 		logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
 
 		echo "rehash failed to verify, something is wrong"
