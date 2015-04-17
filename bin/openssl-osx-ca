@@ -22,7 +22,7 @@ openssldir=$($openssl version -d | cut -d '"' -f 2)
 
 [[ "${openssldir}" = "" ]] && echo "openssl directory not found" && exit 1
 
-tmpdir=$(/usr/bin/mktemp -d -t openssl-osx-ca)
+tmpdir=$(/usr/bin/mktemp -d -t openssl_osx_ca)
 
 [[ "${tmpdir}" = "" ]] && echo "mktemp failed" && exit 1
 
