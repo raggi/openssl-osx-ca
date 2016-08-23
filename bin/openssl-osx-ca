@@ -1,6 +1,19 @@
 #!/bin/bash
 
-brew=$1
+skip_login_keychain=false
+
+while [ ! $# -eq 0 ]; do
+    case "$1" in
+        --skip-login-keychain)
+            skip_login_keychain=true
+            ;;
+        *brew)
+	    brew=$1
+            ;;
+    esac
+    shift
+done
+
 if [[ "${brew}" = "" ]]; then
 	brew=$(which brew)
 fi
@@ -29,6 +42,9 @@ tmpdir=$(/usr/bin/mktemp -d -t openssl_osx_ca)
 certs="${tmpdir}/cert.pem"
 security find-certificate -a -p /Library/Keychains/System.keychain > $certs
 security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
+if ! $skip_login_keychain; then
+        security find-certificate -a -p  ~/Library/Keychains/login.keychain >> $certs
+fi
 
 d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
 d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
