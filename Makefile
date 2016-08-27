@@ -11,14 +11,17 @@ XMLARGS=$(ARGS:%=<string>%</string>)
 
 .PHONY: install
 .PHONY: uninstall
+.PHONY: copy
 
-install: $(PLISTDIR)/$(PLIST) $(BINDIR)/openssl-osx-ca
+install: copy
 	launchctl load $(PLISTDIR)/$(PLIST)
 
 uninstall:
 	launchctl unload $(PLISTDIR)/$(PLIST)
 	rm $(BINDIR)/openssl-osx-ca
 	rm $(PLISTDIR)/org.ra66i.openssl-osx-ca.plist
+
+copy: $(PLISTDIR)/$(PLIST) $(BINDIR)/openssl-osx-ca
 
 $(PLISTDIR):
 	install -d $(PLISTDIR)
