@@ -25,15 +25,17 @@ path, commonly `/usr/local/etc/openssl/cert.pem`.
 
  * To install standalone:
    ``` bash
-      make install PREFIX=/opt/openssl-osx-ca
+      make install
    ```
 
  * To set the frequency, set the value of FREQUENCY when installing, defaults to
-   `@hourly`. The value of FREQUENCY must be a supported crontab time
-   specification. e.g.
+   `3600`, one hour. The value of FREQUENCY must be a value in seconds.
    ``` bash
-      make install FREQUENCY=@daily
+      make install FREQUENCY=3600
    ```
+
+ * Other variables from the Makefile can be overridden, take a look at the head
+   of the Makefile for more information.
 
 ## Intended use cases
 
@@ -50,4 +52,5 @@ path, commonly `/usr/local/etc/openssl/cert.pem`.
  * OSX CA bundles are not always particularly up to date, for example in August
    2016, they contained 17 expired certificates and several that Mozilla have
    chosen to remove, either for technical or audit reasons.
-
+ * Installation as root is generally not required, and may require some extra
+   changes to the Makefile.
