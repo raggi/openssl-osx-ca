@@ -21,6 +21,7 @@ path, commonly `/usr/local/etc/openssl/cert.pem`.
    ``` bash
       brew tap raggi/ale
       brew install openssl-osx-ca
+      brew services start openssl-osx-ca
    ```
 
  * To install standalone:
