@@ -1,7 +1,10 @@
-# openssl-osx-ca
+# openssl-osx-ca (and libressl-osx-ca)
 
 A simple script intended to be run from `cron(1)` to sync an openssl style CA
 pem with the certificates found in the OSX Keychain(s).
+
+The name is now a misnomer, as the software will manage certificate bundles for
+both openssl and libressl installed under Homebrew.
 
 The keychains exported to the CA bundle by default are:
  * System.keychain

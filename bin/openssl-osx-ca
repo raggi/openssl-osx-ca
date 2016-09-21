@@ -1,5 +1,9 @@
 #!/bin/bash
 
+usage() {
+	echo "$(basename $0) [--skip-login-keychain] [--skip-system-keychain] [-h|--help] [\`which brew\`]"
+}
+
 skip_system_keychain=false
 skip_login_keychain=false
 
@@ -11,8 +15,16 @@ while [ ! $# -eq 0 ]; do
 		--skip-system-keychain)
 			skip_system_keychain=true
 			;;
+		-h|--help)
+			usage
+			exit 1
+			;;
 		*brew)
 			brew=$1
+			;;
+		*)
+			echo "Unknown argument: $1" >&2
+			exit 1
 			;;
 	esac
 	shift
@@ -24,53 +36,79 @@ fi
 
 if [[ ! -x "${brew}" ]]; then
 	echo "Homebrew not in PATH or given arguments, cannot continue"
+	usage
 	exit 1
 fi
 
-openssl=$($brew list openssl | grep bin/openssl | head -n 1)
-
-[[ "${openssl}" = "" ]] && echo "Homebrew openssl not found" && exit 1
-
-c_rehash=$($brew list openssl | grep bin/c_rehash | head -n 1)
-
-[[ "${c_rehash}" = "" ]] && echo "Homebrew c_rehash (openssl) not found" && exit 1
-
-openssldir=$($openssl version -d | cut -d '"' -f 2)
-
-[[ "${openssldir}" = "" ]] && echo "openssl directory not found" && exit 1
-
-tmpdir=$(/usr/bin/mktemp -d -t openssl_osx_ca)
-
-[[ "${tmpdir}" = "" ]] && echo "mktemp failed" && exit 1
-
-certs="${tmpdir}/cert.pem"
-if ! $skip_system_keychain ; then
-	security find-certificate -a -p /Library/Keychains/System.keychain > $certs
-fi
-security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
-if [[ -f ~/Library/Keychains/login.keychain ]] && ! $skip_login_keychain ; then
-        security find-certificate -a -p  ~/Library/Keychains/login.keychain >> $certs
-fi
-
-d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
-d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
-
-if [[ "${d1}" = "${d2}" ]]; then
-	logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
-else
-	if ! $c_rehash -- $tmpdir > /dev/null; then
-		logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
-
-		echo "rehash failed to verify, something is wrong"
-		echo "check ${tmpdir}/cert.pem for problems"
-		exit 1
+exitcode=0
+err() {
+	if [[ -d $1 ]]; then
+		rm -r "${1}"
 	fi
 
-	# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
-	# get without a lot more work.
-	mv -f ${tmpdir}/* ${openssldir}/
+	exitcode=$(($exitcode + 1))
+}
 
-	logger -t "$(basename $0)" "${openssldir}/cert.pem updated"
-fi
+genbundle() {
+	local sslimpl=$1
 
-rm -r "${tmpdir}"
+	local list=$($brew list $sslimpl 2>/dev/null)
+	[[ -z $list ]] && continue
+
+	local openssl=$(echo "$list" | grep bin/openssl | head -n 1)
+
+	[[ "${openssl}" = "" ]] && echo "Homebrew $sslimpl not found" && err && return 1
+
+	local openssldir=$($openssl version -d | cut -d '"' -f 2)
+
+	[[ "${openssldir}" = "" ]] && echo "$sslimpl directory not found" && err && return 1
+
+	local tmpdir=$(/usr/bin/mktemp -d -t openssl_osx_ca)
+
+	[[ "${tmpdir}" = "" ]] && echo "mktemp failed" && err "${tmpdir}" && return 1
+
+	local certs="${tmpdir}/cert.pem"
+	if ! $skip_system_keychain ; then
+		security find-certificate -a -p /Library/Keychains/System.keychain > $certs
+	fi
+	security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
+	if [[ -f ~/Library/Keychains/login.keychain ]] && ! $skip_login_keychain ; then
+		security find-certificate -a -p  ~/Library/Keychains/login.keychain >> $certs
+	fi
+
+	d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
+	d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
+
+	if [[ "${d1}" = "${d2}" ]]; then
+		logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
+	else
+
+		# Note: there's no c_rehash bundled with libressl, the bundle is still
+		# produced, so carry on as normal and just produce a bundle in the standard
+		# location.
+		local c_rehash=$(echo "$list" | grep bin/c_rehash | head -n 1)
+		if [[ -n $c_rehash ]]; then
+			if ! $c_rehash -- $tmpdir > /dev/null; then
+				logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
+
+				echo "rehash failed to verify, something is wrong"
+				echo "check ${tmpdir}/cert.pem for problems"
+				err "${tmpdir}" && return 1
+			fi
+		fi
+
+		# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
+		# get without a lot more work.
+		mv -f ${tmpdir}/* ${openssldir}/
+
+		logger -t "$(basename $0)" "${openssldir}/cert.pem updated"
+	fi
+
+	rm -r "${tmpdir}"
+}
+
+for sslimpl in openssl libressl; do
+	genbundle $sslimpl
+done
+
+exit $exitcode
