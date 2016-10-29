@@ -1,19 +1,19 @@
-# openssl-osx-ca (and libressl-osx-ca)
+# osx-ca-certs (previously openssl-osx-ca (and libressl-osx-ca))
 
-A simple script intended to be run from `cron(1)` to sync an openssl style CA
-pem with the certificates found in the OSX Keychain(s).
+A simple tool and script intended to be run periodically by `launchd(8)` to sync
+an openssl style CA pem with the certificates found in the OSX Keychain(s).
 
-The name is now a misnomer, as the software will manage certificate bundles for
-both openssl and libressl installed under Homebrew.
+The original name is now a misnomer, as the software will manage certificate
+bundles for both openssl and libressl installed under Homebrew.
+
+The Makefile contains a target called `osx-ca-certs` that acts a lot like
+`security export -t certs -p`, except that it does not dump certificates that
+are marked as untrusted as the latter does.
 
 The keychains exported to the CA bundle by default are:
  * System.keychain
  * SystemRootCertificates.keychain
  * login.keychain (if run as a user)
-
-Note: You can disable login.keychain exports by supplying
-`--skip-login-keychain`. If you install as root, remember that user logins
-keychains will not be included.
 
 The installed CA pem file will be made available through the default X.509 store
 path, commonly `/usr/local/etc/openssl/cert.pem`.
@@ -44,11 +44,14 @@ path, commonly `/usr/local/etc/openssl/cert.pem`.
 ## Intended use cases
 
  * Ruby 2.0.0+
- * Other brew installed programs that rely on modern OpenSSL versions
- * Programs that require a ca-certificates style bundle
+ * LibreSSL users
+ * OpenSSL users
+ * Other brew / manually installed things that link a non-Apple TLS
+   implementations
 
 ## Known limitations & Notes
 
+ * Only supports El Capitan and above.
  * Syncs are by default perfomed once per hour.
  * Syncs may not be sufficiently atomic. There is a small possiblity of race
    conditions that could cause `openssl` programs to fail. The sync time is very

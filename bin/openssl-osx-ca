@@ -1,23 +1,20 @@
 #!/bin/bash
 
 usage() {
-	echo "$(basename $0) [--skip-login-keychain] [--skip-system-keychain] [-h|--help] [\`which brew\`]"
+	echo "$(basename $0) [-h|--help] [-path osx-ca-certs] [\`which brew\`]"
 }
 
-skip_system_keychain=false
-skip_login_keychain=false
+osx_ca_certs=osx-ca-certs
 
 while [ ! $# -eq 0 ]; do
 	case "$1" in
-		--skip-login-keychain)
-			skip_login_keychain=true
-			;;
-		--skip-system-keychain)
-			skip_system_keychain=true
-			;;
 		-h|--help)
 			usage
 			exit 1
+			;;
+		-path)
+			shift
+			osx_ca_certs=$1
 			;;
 		*brew)
 			brew=$1
@@ -68,13 +65,7 @@ genbundle() {
 	[[ "${tmpdir}" = "" ]] && echo "mktemp failed" && err "${tmpdir}" && return 1
 
 	local certs="${tmpdir}/cert.pem"
-	if ! $skip_system_keychain ; then
-		security find-certificate -a -p /Library/Keychains/System.keychain > $certs
-	fi
-	security find-certificate -a -p /System/Library/Keychains/SystemRootCertificates.keychain >> $certs
-	if [[ -f ~/Library/Keychains/login.keychain ]] && ! $skip_login_keychain ; then
-		security find-certificate -a -p  ~/Library/Keychains/login.keychain >> $certs
-	fi
+	$osx_ca_certs > $certs
 
 	d1=$($openssl md5 ${openssldir}/cert.pem | awk '{print $2}')
 	d2=$($openssl md5 ${tmpdir}/cert.pem | awk '{print $2}')
