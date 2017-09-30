@@ -73,21 +73,6 @@ genbundle() {
 	if [[ "${d1}" = "${d2}" ]]; then
 		logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
 	else
-
-		# Note: there's no c_rehash bundled with libressl, the bundle is still
-		# produced, so carry on as normal and just produce a bundle in the standard
-		# location.
-		local c_rehash=$(echo "$list" | grep bin/c_rehash | head -n 1)
-		if [[ -n $c_rehash ]]; then
-			if ! $c_rehash -- $tmpdir > /dev/null; then
-				logger -t "$(basename $0)" "${openssldir}/cert.pem updated failed, see cron"
-
-				echo "rehash failed to verify, something is wrong"
-				echo "check ${tmpdir}/cert.pem for problems"
-				err "${tmpdir}" && return 1
-			fi
-		fi
-
 		# XXX: I don't think this is atomic on OSX, but it's as close as we're going to
 		# get without a lot more work.
 		mv -f ${tmpdir}/* ${openssldir}/
