@@ -83,7 +83,7 @@ genbundle() {
 	rm -r "${tmpdir}"
 }
 
-impls="$(brew list | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$')"
+impls="$($brew list | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$')"
 for sslimpl in $impls; do
 	genbundle $sslimpl
 done
