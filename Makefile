@@ -12,9 +12,6 @@ XMLARGS=$(ARGS:%=<string>%</string>)
 .PHONY: uninstall
 .PHONY: copy
 
-osx-ca-certs: osx-ca-certs.m
-	clang -framework CoreFoundation -framework Security $< -o $@
-
 install: copy
 	launchctl load $(PLISTDIR)/$(PLIST)
 
@@ -42,7 +39,7 @@ $(PLISTDIR)/$(PLIST): Library/LaunchAgents/$(PLIST) $(PLISTDIR) Makefile
 $(BINDIR)/openssl-osx-ca: bin/openssl-osx-ca $(BINDIR)
 	install -m 0755 $< $@
 
-$(BINDIR)/osx-ca-certs: osx-ca-certs $(BINDIR)
+$(BINDIR)/osx-ca-certs: osx-ca-certs.rb $(BINDIR)
 	install -m 0755 $< $@
 
 clean:
