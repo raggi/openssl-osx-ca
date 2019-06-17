@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-	echo "$(basename $0) [-h|--help] [-path osx-ca-certs] [\`which brew\`]"
+	echo "$(basename "$0") [-h|--help] [-path osx-ca-certs] [\`which brew\`]"
 }
 
 osx_ca_certs=osx-ca-certs
@@ -14,10 +14,10 @@ while [ ! $# -eq 0 ]; do
 			;;
 		-path)
 			shift
-			osx_ca_certs=$1
+			osx_ca_certs="$1"
 			;;
 		*brew)
-			brew=$1
+			brew="$1"
 			;;
 		*)
 			echo "Unknown argument: $1" >&2
@@ -49,7 +49,7 @@ err() {
 genbundle() {
 	local sslimpl=$1
 
-	local list=$($brew list $sslimpl 2>/dev/null)
+	local list=$("$brew" list $sslimpl 2>/dev/null)
 	[[ -z $list ]] && continue
 
 	local openssl=$(echo "$list" | grep bin/openssl | head -n 1)
@@ -83,7 +83,7 @@ genbundle() {
 	rm -r "${tmpdir}"
 }
 
-impls="$($brew list | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$')"
+impls="$("$brew" list | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$')"
 for sslimpl in $impls; do
 	genbundle $sslimpl
 done
