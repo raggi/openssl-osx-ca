@@ -22,7 +22,7 @@ begin
     file.truncate cert.size
     file.flush
 
-    system sec, "verify-cert", "-q", "-l", "-L", "-p", "ssl", "-R", "offline", "-c", file.path, [:err, :out] => "/dev/null"
+    system sec, "verify-cert", "-q", "-l", "-L", "-R", "offline", "-c", file.path, [:out] => "/dev/null"
   end
 ensure
   file.close! if file
