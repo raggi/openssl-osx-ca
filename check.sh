@@ -14,5 +14,5 @@ for impl in "${impls[@]}"; do
     exit 1
   fi
 
-  security verify-cert -q -l -L -p ssl -R offline -c "$pem" || exit $?
+  security verify-cert -q -l -L -R offline -c "$pem" || exit $?
 done
