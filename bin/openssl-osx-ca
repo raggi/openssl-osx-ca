@@ -42,7 +42,7 @@ genbundle() {
 	local sslimpl="$1"
 	local certpem="$2"
 
-	local list=$("$brew" list $sslimpl 2>/dev/null)
+	local list=$("$brew" list --formula $sslimpl 2>/dev/null)
 	[[ -z $list ]] && continue
 
 	local openssl=$(echo "$list" | grep bin/openssl | head -n 1)
@@ -76,7 +76,7 @@ certs="${tmpdir}/cert.pem"
 "${osx_ca_certs}" > "${certs}"
 
 exitcode=0
-impls=($("$brew" list | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$'))
+impls=($("$brew" list --formula | grep -E '^((libre|open)ssl(@[0-9\.]+)?)$'))
 for sslimpl in "${impls[@]}"; do
 	genbundle "${sslimpl}" "${certs}"
 	exitcode=$(( $exitcode + $? ))
