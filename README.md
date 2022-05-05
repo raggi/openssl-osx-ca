@@ -16,7 +16,8 @@ The keychains exported to the CA bundle by default are:
  * login.keychain (if run as a user)
 
 The installed CA pem file will be made available through the default X.509 store
-path, commonly `/usr/local/etc/openssl/cert.pem`.
+path. This is commonly found in either: `/usr/local/etc/openssl/cert.pem` (for
+Intel based Macs) or `/opt/homebrew/etc/openssl/cert.pem` (for M1/ARM based Macs).
 
 ## Installation
 
