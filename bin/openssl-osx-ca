@@ -60,7 +60,7 @@ genbundle() {
 		logger -t "$(basename $0)" "${openssldir}/cert.pem up to date"
 	else
 		cp "${certpem}" "${openssldir}/cert.pem.new"
-		mv -f "${openssldir}/cert.pem"{.new,}
+		mv -f "${openssldir}/cert.pem.new" "${openssldir}/cert.pem"
 
 		logger -t "$(basename $0)" "${openssldir}/cert.pem updated"
 	fi
